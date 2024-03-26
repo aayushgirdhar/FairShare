@@ -1,9 +1,10 @@
 export type Expense = {
   id: string;
+  uid: string;
   description: string;
   amount: number;
-  payee: string;
   payer: string[];
+  group: string;
   createdAt: string;
   updatedAt: string;
 };
