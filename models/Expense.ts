@@ -10,15 +10,24 @@ const ExpenseSchema = new mongoose.Schema(
     description: {
       type: String,
     },
-    amount: {
+    total: {
       type: Number,
       required: true,
     },
-    payer: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: "User",
-      required: true,
-    },
+    payers: [
+      {
+        _id: false,
+        uid: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        amount: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
     group: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Group",
@@ -28,4 +37,5 @@ const ExpenseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Expense || mongoose.model("Expense", ExpenseSchema);
+export default mongoose.models.Expense ||
+  mongoose.model("Expense", ExpenseSchema);
