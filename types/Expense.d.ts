@@ -1,6 +1,7 @@
 type Payer = {
   uid: string;
   amount: number;
+  isPaid: boolean;
 };
 
 export type Expense = {
@@ -8,8 +9,7 @@ export type Expense = {
   uid: string;
   description: string;
   total: number;
-  payers: Payer[];
-  group: string;
-  createdAt: string;
-  updatedAt: string;
+  group_id: string;
+  isPaid: boolean;
+  date: string;
 };

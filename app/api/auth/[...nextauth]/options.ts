@@ -2,8 +2,8 @@ import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import User from "@/models/User";
-import connectDB from "@/db/mongodb";
+import { sql } from "@vercel/postgres";
+import { User } from "@/types/User";
 
 import bcrypt from "bcryptjs";
 
@@ -17,9 +17,10 @@ export const options = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        await connectDB();
         try {
-          const user = await User.findOne({ email: credentials?.email });
+          const { rows } =
+            await sql`SELECT * FROM users WHERE email = ${credentials?.email};`;
+          const user = rows[0];
 
           if (!user) {
             throw new Error("User not found!");
@@ -35,7 +36,7 @@ export const options = {
           if (!isPasswordCorrect) {
             throw new Error("Incorrect password!");
           }
-          return user;
+          return user as User;
         } catch (err: any) {
           if (err.message === "User not found!") {
             return Promise.reject(new Error("User not found!"));
@@ -63,16 +64,17 @@ export const options = {
       if (account?.provider === "credentials") {
         return true;
       }
-      await connectDB();
 
-      const user = await User.findOne({ email: profile.email });
+      const { rows } =
+        await sql`SELECT * FROM users WHERE email = ${profile.email}`;
+      const user = rows[0];
       if (!user) {
-        await User.create({
-          email: profile.email,
-          name: profile.name,
-          image: profile.avatar_url,
-          isOAuth: true,
-        });
+        const date = new Date().toISOString();
+        await sql`INSERT INTO users (name, email, image, is_oauth, date) VALUES (${
+          profile.name
+        }, ${profile.email}, ${
+          profile.avatar_url || profile.picture
+        }, true, ${date});`;
       }
       return true;
     },

@@ -4,9 +4,6 @@ export type User = {
   email: string;
   image: string;
   password: string;
-  groups: string[];
-  expenses: string[];
   isOAuth: boolean;
-  createdAt: string;
-  updatedAt: string;
+  date: string;
 };

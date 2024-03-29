@@ -53,7 +53,7 @@ export const LoginForm = () => {
         }
       } else {
         setLoading(false);
-        router.push("/");
+        router.refresh();
       }
     } catch (err: any) {
       setError(err.message);

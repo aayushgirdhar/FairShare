@@ -1,8 +1,6 @@
 export type Group = {
   id: string;
   name: string;
-  members: string[];
-  expenses: string[];
-  createdAt: string;
-  updatedAt: string;
+  admin_id: string;
+  date: string;
 };
