@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export default async function Home() {
