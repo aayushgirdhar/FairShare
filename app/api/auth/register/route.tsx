@@ -9,7 +9,7 @@ export const POST = async (req: NextRequest) => {
     if (rows.length) {
       return NextResponse.json(
         { error: "User already exists!" },
-        { status: 400 }
+        { status: 409 }
       );
     }
     const date = new Date().toISOString();
@@ -17,9 +17,6 @@ export const POST = async (req: NextRequest) => {
     await sql`INSERT INTO users (name, email, password, date) VALUES (${name}, ${email}, ${hashedPassword}, ${date})`;
     return NextResponse.json({ message: "User created!" }, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Something went wrong!" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error }, { status: 500 });
   }
 };

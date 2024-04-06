@@ -4,17 +4,28 @@ import { Syne } from "next/font/google";
 
 const syne = Syne({ subsets: ["latin"], weight: ["700"] });
 
+import { toast } from "react-hot-toast";
+
 import { useEffect, useState } from "react";
 import { LoginButton } from "./LoginButton";
 import { Loader } from "@/components/Loader";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { signIn } from "next-auth/react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export const LoginForm = () => {
+type Error = {
+  response: {
+    data: {
+      error: string;
+    };
+  };
+};
+
+export const SignupForm = () => {
   const [type, setType] = useState("password");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,32 +42,28 @@ export const LoginForm = () => {
     };
   }, [error]);
 
-  const handleLogin = async (e: React.FormEvent<HTMLButtonElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLButtonElement>) => {
     setLoading(true);
     e.preventDefault();
-    if (!email || !password) {
+    if (!name || !email || !password) {
       setLoading(false);
       setError("Please fill all the fields");
       return;
     }
     try {
-      const res = await signIn("credentials", {
+      const res = await axios.post("/api/auth/register", {
+        name,
         email,
         password,
-        redirect: false,
       });
-
-      if (res?.error) {
-        {
-          setError(res.error);
-          setLoading(false);
-        }
-      } else {
+      console.log(res);
+      if(res.status === 201) {
         setLoading(false);
-        router.refresh();
+        toast.success("User created successfully");
+        router.push("/auth/login");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: any) {
+      setError(error.response.data.error || error);
       setLoading(false);
     }
   };
@@ -77,6 +84,21 @@ export const LoginForm = () => {
         </div>
         <form className="flex flex-col gap-6 w-96 h-full mx-auto">
           <div className="flex flex-col gap-2">
+            <label htmlFor="name" className="font-semibold">
+              Name
+            </label>
+            <input
+              className="border border-gray-300 rounded-lg p-2 outline-none focus:border-purple-600 shadow-sm transition-all"
+              type="text"
+              id="name"
+              name="name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
             <label htmlFor="email" className="font-semibold">
               Email
             </label>
@@ -89,7 +111,6 @@ export const LoginForm = () => {
               onChange={(e) => {
                 setEmail(e.target.value);
               }}
-              required
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -106,7 +127,6 @@ export const LoginForm = () => {
                 onChange={(e) => {
                   setPassword(e.target.value);
                 }}
-                required
               />
               <span
                 className="absolute right-[10px] top-[8.5px] cursor-pointer p-1 hover:bg-gray-200 flex items-center justify-center rounded-lg transition-all text-gray-600"
@@ -131,15 +151,15 @@ export const LoginForm = () => {
           )}
           <button
             className=" bg-purple-600 text-white border border-neutral-300 rounded-lg py-2 outline-none font-semibold w-full mt-auto hover:bg-purple-800 transition-all"
-            onClick={handleLogin}
+            onClick={handleSignup}
           >
             {loading ? <Loader /> : "Login"}
           </button>
         </form>
         <p className="text-right text-neutral-600 text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className="underline">
-            signup
+          Have been here before?{" "}
+          <Link href="/auth/login" className="underline">
+            login
           </Link>
         </p>
       </div>
