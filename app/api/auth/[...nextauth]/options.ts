@@ -2,8 +2,8 @@ import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import { sql } from "@vercel/postgres";
-import { User } from "@/types/User";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 import bcrypt from "bcryptjs";
 
@@ -18,35 +18,29 @@ export const options = {
       },
       async authorize(credentials) {
         try {
-          const { rows } =
-            await sql`SELECT * FROM users WHERE email = ${credentials?.email};`;
-          const user = rows[0];
+          const user = await prisma.users.findFirst({
+            where: {
+              email: credentials?.email as string,
+            },
+          });
 
           if (!user) {
             throw new Error("User not found!");
           }
-          if (user.isOAuth) {
+          if (user.is_oauth) {
             throw new Error("User is registered with OAuth!");
           }
           const isPasswordCorrect = await bcrypt.compare(
             credentials?.password as string,
-            user.password
+            user.password as string
           );
 
           if (!isPasswordCorrect) {
             throw new Error("Incorrect password!");
           }
-          return user as User;
+          return user;
         } catch (err: any) {
-          if (err.message === "User not found!") {
-            return Promise.reject(new Error("User not found!"));
-          } else if (err.message === "Incorrect password!") {
-            return Promise.reject(new Error("Incorrect password!"));
-          } else if (err.message === "User is registered with OAuth!") {
-            return Promise.reject(new Error("User is registered with OAuth!"));
-          } else {
-            return Promise.reject(new Error("Unknown error occurred!"));
-          }
+          throw new Error(err.message);
         }
       },
     }),
@@ -65,16 +59,31 @@ export const options = {
         return true;
       }
 
-      const { rows } =
-        await sql`SELECT * FROM users WHERE email = ${profile.email}`;
-      const user = rows[0];
+      const user = await prisma.users.findFirst({
+        where: {
+          email: profile.email,
+        },
+      });
+
       if (!user) {
-        const date = new Date().toISOString();
-        await sql`INSERT INTO users (name, email, image, is_oauth, date) VALUES (${
-          profile.name
-        }, ${profile.email}, ${
-          profile.avatar_url || profile.picture
-        }, true, ${date});`;
+        await prisma.users.create({
+          data: {
+            name: profile.name,
+            email: profile.email,
+            image: profile.avatar_url || profile.picture,
+            is_oauth: true,
+            date: new Date().toISOString(),
+          },
+        });
+      } else {
+        await prisma.users.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            image: profile.avatar_url || profile.picture,
+          },
+        });
       }
       return true;
     },
