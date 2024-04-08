@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model users {
+  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name           String           @db.VarChar(255)
+  email          String           @unique
+  image          String?
+  password       String?
+  is_oauth       Boolean?         @default(false)
+  date           String?
+  expense_payers expense_payers[]
+  expenses       expenses[]
+  group_members  group_members[]
+  groups         groups[]
+}
+
+model expenses {
+  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  uid            String?          @db.Uuid
+  description    String?
+  total          Decimal          @db.Decimal(10, 2)
+  group_id       String?          @db.Uuid
+  is_paid        Boolean?         @default(false)
+  date           String?
+  expense_payers expense_payers[]
+  groups         groups?          @relation(fields: [group_id], references: [id], onUpdate: NoAction)
+  users          users?           @relation(fields: [uid], references: [id], onUpdate: NoAction)
+}
+
+model groups {
+  id            String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String          @db.VarChar(255)
+  admin_id      String?         @db.Uuid
+  date          String?
+  expenses      expenses[]
+  group_members group_members[]
+  users         users?          @relation(fields: [admin_id], references: [id], onUpdate: NoAction)
+}
+
+model expense_payers {
+  expense_id String   @db.Uuid
+  user_id    String   @db.Uuid
+  amount     Decimal  @db.Decimal(10, 2)
+  is_paid    Boolean? @default(false)
+  expenses   expenses @relation(fields: [expense_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([expense_id, user_id])
+}
+
+
+model group_members {
+  group_id String @db.Uuid
+  user_id  String @db.Uuid
+  groups   groups @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users    users  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([group_id, user_id])
+}
