@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const POST = async (req: NextRequest) => {
   const { name, email, password } = await req.json();
   try {
-    const user = await prisma.users.findFirst({
+    const user = await prisma.user.findFirst({
       where: {
         email,
       },
@@ -18,10 +18,11 @@ export const POST = async (req: NextRequest) => {
         { status: 409 }
       );
     }
-    const newUser = await prisma.users.create({
+    const newUser = await prisma.user.create({
       data: {
         name,
         email,
+        image: "",
         password: await bcrypt.hash(password, 10),
         is_oauth: false,
         date: new Date().toISOString(),

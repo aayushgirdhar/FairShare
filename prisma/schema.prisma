@@ -8,60 +8,43 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-model users {
-  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name           String           @db.VarChar(255)
-  email          String           @unique
-  image          String?
-  password       String?
-  is_oauth       Boolean?         @default(false)
-  date           String?
-  expense_payers expense_payers[]
-  expenses       expenses[]
-  group_members  group_members[]
-  groups         groups[]
+model User {
+  id       Int       @id @default(autoincrement())
+  name     String
+  email    String    @unique
+  image    String
+  password String
+  is_oauth Boolean   @default(false)
+  date     String
+  groups   Group[]
+  expenses Expense[]
 }
 
-model expenses {
-  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  uid            String?          @db.Uuid
-  description    String?
-  total          Decimal          @db.Decimal(10, 2)
-  group_id       String?          @db.Uuid
-  is_paid        Boolean?         @default(false)
-  date           String?
-  expense_payers expense_payers[]
-  groups         groups?          @relation(fields: [group_id], references: [id], onUpdate: NoAction)
-  users          users?           @relation(fields: [uid], references: [id], onUpdate: NoAction)
+model Group {
+  id       Int       @id @default(autoincrement())
+  name     String
+  date     String
+  members  User[]
+  expenses Expense[]
 }
 
-model groups {
-  id            String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name          String          @db.VarChar(255)
-  admin_id      String?         @db.Uuid
-  date          String?
-  expenses      expenses[]
-  group_members group_members[]
-  users         users?          @relation(fields: [admin_id], references: [id], onUpdate: NoAction)
+model Expense {
+  id          Int     @id @default(autoincrement())
+  description String
+  total       Float
+  is_paid     Boolean @default(false)
+  date        String
+  group_id     Int
+  group       Group   @relation(fields: [group_id], references: [id])
+  payers      Payer[]
+  user_id      Int?
+  User        User?   @relation(fields: [user_id], references: [id])
 }
 
-model expense_payers {
-  expense_id String   @db.Uuid
-  user_id    String   @db.Uuid
-  amount     Decimal  @db.Decimal(10, 2)
-  is_paid    Boolean? @default(false)
-  expenses   expenses @relation(fields: [expense_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([expense_id, user_id])
-}
-
-
-model group_members {
-  group_id String @db.Uuid
-  user_id  String @db.Uuid
-  groups   groups @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users    users  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([group_id, user_id])
+model Payer {
+  id         Int     @id @default(autoincrement())
+  amount     Float
+  is_paid    Boolean @default(false)
+  expense_id Int
+  expense    Expense @relation(fields: [expense_id], references: [id])
 }
