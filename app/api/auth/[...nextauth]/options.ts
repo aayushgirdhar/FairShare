@@ -16,9 +16,19 @@ export const options = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(
+        credentials
+      ): Promise<{
+        id: string;
+        name: string;
+        email: string;
+        image: string;
+        password: string;
+        is_oauth: boolean;
+        date: string;
+      }> {
         try {
-          const user = await prisma.users.findFirst({
+          const user = await prisma.user.findFirst({
             where: {
               email: credentials?.email as string,
             },
@@ -38,7 +48,7 @@ export const options = {
           if (!isPasswordCorrect) {
             throw new Error("Incorrect password!");
           }
-          return user;
+          return user as any;
         } catch (err: any) {
           throw new Error(err.message);
         }
@@ -59,24 +69,25 @@ export const options = {
         return true;
       }
 
-      const user = await prisma.users.findFirst({
+      const user = await prisma.user.findFirst({
         where: {
           email: profile.email,
         },
       });
 
       if (!user) {
-        await prisma.users.create({
+        await prisma.user.create({
           data: {
             name: profile.name,
             email: profile.email,
+            password: "",
             image: profile.avatar_url || profile.picture,
             is_oauth: true,
             date: new Date().toISOString(),
           },
         });
       } else {
-        await prisma.users.update({
+        await prisma.user.update({
           where: {
             id: user.id,
           },
@@ -100,4 +111,7 @@ export const options = {
       return session;
     },
   },
+  session: {
+    jwt: true,
+  }
 };
