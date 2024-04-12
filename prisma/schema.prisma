@@ -18,6 +18,7 @@ model User {
   date     String
   groups   Group[]
   expenses Expense[]
+  payers   Payer[]
 }
 
 model Group {
@@ -37,8 +38,8 @@ model Expense {
   group_id     Int
   group       Group   @relation(fields: [group_id], references: [id])
   payers      Payer[]
-  user_id      Int?
-  User        User?   @relation(fields: [user_id], references: [id])
+  user_id      Int
+  User        User   @relation(fields: [user_id], references: [id])
 }
 
 model Payer {
@@ -47,4 +48,6 @@ model Payer {
   is_paid    Boolean @default(false)
   expense_id Int
   expense    Expense @relation(fields: [expense_id], references: [id])
+  user_id    Int
+  user       User    @relation(fields: [user_id], references: [id])
 }
