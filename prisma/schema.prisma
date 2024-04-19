@@ -9,11 +9,11 @@ datasource db {
 }
 
 model User {
-  id       Int            @id @default(autoincrement())
+  id       String            @id @default(uuid())
   name     String
   email    String         @unique
-  image    String
-  password String
+  image    String?
+  password String?
   is_oauth Boolean        @default(false)
   date     String
   groups   GroupMember[]
@@ -23,42 +23,42 @@ model User {
 }
 
 model Group {
-  id       Int           @id @default(autoincrement())
+  id       String            @id @default(uuid())
   name     String
   date     String
   admin    User          @relation(fields: [admin_id], references: [id])
-  admin_id Int
+  admin_id String
   expenses Expense[]
   members  GroupMember[]
 }
 
 model GroupMember {
-  group_id Int
   group    Group @relation(fields: [group_id], references: [id])
-  user_id  Int
+  group_id String
   user     User  @relation(fields: [user_id], references: [id])
+  user_id  String
 
   @@id([group_id, user_id])
 }
 
 model Expense {
-  id          Int            @id @default(autoincrement())
+  id       String            @id @default(uuid())
   description String
   total       Float
   is_paid     Boolean        @default(false)
   date        String
   payee       User           @relation(fields: [payee_id], references: [id])
-  payee_id    Int
+  payee_id    String
   group       Group          @relation(fields: [group_id], references: [id])
-  group_id    Int
+  group_id    String
   payers      ExpensePayer[]
 }
 
 model ExpensePayer {
   user       User    @relation(fields: [user_id], references: [id])
-  user_id    Int
+  user_id    String
   expense    Expense @relation(fields: [expense_id], references: [id])
-  expense_id Int
+  expense_id String
   is_paid    Boolean @default(false)
   amount     Float
 
