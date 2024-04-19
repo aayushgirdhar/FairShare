@@ -6,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 import bcrypt from "bcryptjs";
+import { User } from "next-auth";
 
 export const options = {
   providers: [
@@ -16,17 +17,7 @@ export const options = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(
-        credentials
-      ): Promise<{
-        id: string;
-        name: string;
-        email: string;
-        image: string;
-        password: string;
-        is_oauth: boolean;
-        date: string;
-      }> {
+      async authorize(credentials): Promise<User> {
         try {
           const user = await prisma.user.findFirst({
             where: {
@@ -98,20 +89,26 @@ export const options = {
       }
       return true;
     },
-    async jwt({ token, user }: { token: any; user: any }) {
+    async jwt({ token, user }: { user: User, token: any }) {
       if (user) {
-        token.id = user.id;
+        token.uid = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.image = user.image;
       }
       return token;
     },
     async session({ session, token }: { session: any; token: any }) {
-      if (session?.user) {
-        session.user.id = token.id;
+      if (token) {
+        session.user.id = token.sub;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.image;
       }
       return session;
     },
   },
   session: {
-    jwt: true,
-  }
+    strategy: "jwt",
+  },
 };
