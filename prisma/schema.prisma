@@ -9,45 +9,58 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
+  id       Int            @id @default(autoincrement())
   name     String
-  email    String    @unique
+  email    String         @unique
   image    String
   password String
-  is_oauth Boolean   @default(false)
+  is_oauth Boolean        @default(false)
   date     String
-  groups   Group[]
+  groups   GroupMember[]
+  admin    Group[]
   expenses Expense[]
-  payers   Payer[]
+  payer    ExpensePayer[]
 }
 
 model Group {
-  id       Int       @id @default(autoincrement())
+  id       Int           @id @default(autoincrement())
   name     String
   date     String
-  members  User[]
+  admin    User          @relation(fields: [admin_id], references: [id])
+  admin_id Int
   expenses Expense[]
+  members  GroupMember[]
+}
+
+model GroupMember {
+  group_id Int
+  group    Group @relation(fields: [group_id], references: [id])
+  user_id  Int
+  user     User  @relation(fields: [user_id], references: [id])
+
+  @@id([group_id, user_id])
 }
 
 model Expense {
-  id          Int     @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   description String
   total       Float
-  is_paid     Boolean @default(false)
+  is_paid     Boolean        @default(false)
   date        String
-  group_id     Int
-  group       Group   @relation(fields: [group_id], references: [id])
-  payers      Payer[]
-  user_id      Int
-  User        User   @relation(fields: [user_id], references: [id])
+  payee       User           @relation(fields: [payee_id], references: [id])
+  payee_id    Int
+  group       Group          @relation(fields: [group_id], references: [id])
+  group_id    Int
+  payers      ExpensePayer[]
 }
 
-model Payer {
-  id         Int     @id @default(autoincrement())
-  amount     Float
-  is_paid    Boolean @default(false)
-  expense_id Int
-  expense    Expense @relation(fields: [expense_id], references: [id])
-  user_id    Int
+model ExpensePayer {
   user       User    @relation(fields: [user_id], references: [id])
+  user_id    Int
+  expense    Expense @relation(fields: [expense_id], references: [id])
+  expense_id Int
+  is_paid    Boolean @default(false)
+  amount     Float
+
+  @@id([user_id, expense_id])
 }
