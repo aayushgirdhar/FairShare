@@ -73,7 +73,6 @@ export const options = {
             password: "",
             image: profile.avatar_url || profile.picture,
             is_oauth: true,
-            date: new Date().toISOString(),
           },
         });
       } else {
