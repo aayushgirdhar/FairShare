@@ -1,3 +1,9 @@
+import {
+  NextAuthOptions,
+  SessionStrategy,
+  Profile as NextAuthProfile,
+} from "next-auth";
+
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -7,7 +13,12 @@ import prisma from "@/db";
 import bcrypt from "bcryptjs";
 import { User } from "next-auth";
 
-export const options = {
+interface CustomProfile extends NextAuthProfile {
+  avatar_url?: string;
+  picture?: string;
+}
+
+export const options: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       id: "credentials",
@@ -54,40 +65,45 @@ export const options = {
     }),
   ],
   callbacks: {
-    async signIn({ profile, account }: { profile: any; account: any }) {
+    async signIn({
+      account,
+      profile,
+    }: {
+      account: any;
+      profile?: CustomProfile;
+    }) {
       if (account?.provider === "credentials") {
         return true;
       }
 
-      const user = await prisma.user.findFirst({
+      const exists = await prisma.user.findFirst({
         where: {
-          email: profile.email,
+          email: profile?.email,
         },
       });
 
-      if (!user) {
+      if (!exists) {
         await prisma.user.create({
           data: {
-            name: profile.name,
-            email: profile.email,
-            password: "",
-            image: profile.avatar_url || profile.picture,
+            name: profile?.name as string,
+            email: profile?.email as string,
+            image: profile?.avatar_url || (profile?.picture as string),
             is_oauth: true,
           },
         });
       } else {
         await prisma.user.update({
           where: {
-            id: user.id,
+            id: exists.id,
           },
           data: {
-            image: profile.avatar_url || profile.picture,
+            image: profile?.avatar_url || (profile?.picture as string),
           },
         });
       }
       return true;
     },
-    async jwt({ token, user }: { user: User, token: any }) {
+    async jwt({ token, user }) {
       if (user) {
         token.uid = user.id;
         token.name = user.name;
@@ -96,17 +112,17 @@ export const options = {
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub;
-        session.user.name = token.name;
-        session.user.email = token.email;
-        session.user.image = token.image;
+        session.user.id = token?.uid as string;
+        session.user.name = token?.name as string;
+        session.user.email = token?.email as string;
+        session.user.image = token?.image as string;
       }
       return session;
     },
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as SessionStrategy,
   },
 };
