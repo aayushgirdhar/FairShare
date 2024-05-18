@@ -11,10 +11,24 @@ export const POST = async (req: NextRequest) => {
         email,
       },
     });
-    if (user) {
+    if (user && !user.is_invited) {
       return NextResponse.json(
         { error: "User already exists!" },
         { status: 409 }
+      );
+    } else if (user && user.is_invited) {
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          name,
+          password: await bcrypt.hash(password, 10),
+        },
+      });
+      return NextResponse.json(
+        { message: "User created!", user: user },
+        { status: 201 }
       );
     }
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,7 +38,6 @@ export const POST = async (req: NextRequest) => {
         email,
         image: "",
         password: hashedPassword,
-        is_oauth: false,
       },
     });
     return NextResponse.json(
