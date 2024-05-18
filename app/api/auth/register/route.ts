@@ -36,7 +36,6 @@ export const POST = async (req: NextRequest) => {
       data: {
         name,
         email,
-        image: "",
         password: hashedPassword,
       },
     });
