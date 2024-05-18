@@ -9,27 +9,28 @@ datasource db {
 }
 
 model User {
-  id       String         @id @default(uuid())
-  name     String
-  email    String         @unique
-  image    String?
-  password String?
-  is_oauth Boolean        @default(false)
-  created_at     DateTime?       @default(now())
-  groups   GroupMember[]
-  admin    Group[]
-  expenses Expense[]
-  payer    ExpensePayer[]
+  id            String           @id @default(uuid())
+  name          String
+  email         String           @unique
+  image         String?          @default("")
+  password      String?          @default("")
+  is_oauth      Boolean?         @default(false)
+  is_invited    Boolean?         @default(false)
+  created_at    DateTime?        @default(now())
+  groups        GroupMember[]
+  admin         Group[]
+  expenses      Expense[]
+  payer         ExpensePayer[]
 }
 
 model Group {
-  id       String         @id @default(uuid())
-  name     String
+  id             String         @id @default(uuid())
+  name           String
   created_at     DateTime?       @default(now())
-  admin    User           @relation(fields: [admin_id], references: [id])
-  admin_id String
-  expenses Expense[]
-  members  GroupMember[]
+  admin          User           @relation(fields: [admin_id], references: [id])
+  admin_id       String
+  expenses       Expense[]
+  members        GroupMember[]
 }
 
 model GroupMember {
