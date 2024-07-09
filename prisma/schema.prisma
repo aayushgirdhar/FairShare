@@ -53,6 +53,8 @@ model Expense {
   group       Group         @relation(fields: [group_id], references: [id])
   group_id    String
   payers      ExpensePayer[]
+  is_recurring Boolean       @default(false)
+  recurring_date DateTime?
 }
 
 model ExpensePayer {
