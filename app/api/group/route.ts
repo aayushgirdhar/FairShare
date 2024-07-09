@@ -7,26 +7,33 @@ export const GET = async () => {
   const session = await getServerSession(options);
   if (!session)
     return NextResponse.json({ message: "Unauthorized!" }, { status: 401 });
-  const groups = await prisma.groupMember.findMany({
-    where: {
-      user_id: session?.user?.id,
-    },
-    include: {
-      group: {
-        include: {
-          members: {
-            include: {
-              user: true,
+  try {
+    const groups = await prisma.groupMember.findMany({
+      where: {
+        user_id: session?.user?.id,
+      },
+      include: {
+        group: {
+          include: {
+            members: {
+              include: {
+                user: true,
+              },
             },
           },
         },
       },
-    },
-  });
-  if (!groups.length) {
-    return NextResponse.json({ message: "No groups found!" }, { status: 404 });
+    });
+    if (groups.length === 0) {
+      return NextResponse.json(
+        { message: "No groups found!" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json({ groups }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error }, { status: 500 });
   }
-  return NextResponse.json({ groups }, { status: 200 });
 };
 
 export const POST = async (req: NextRequest) => {
@@ -57,6 +64,8 @@ export const POST = async (req: NextRequest) => {
 
       if (!user) {
         // TODO: send invitation email
+
+        //placeholder user
         user = await prisma.user.create({
           data: {
             name: email.split("@")[0],
